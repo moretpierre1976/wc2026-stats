@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#05080f"/>
+  <meta name="description" content="WC 2026 Player Statistics — 295 players, 30 nations"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="WC 2026 Stats"/>
+  <title>WC 2026 Player Stats</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#05080f}
+    #root{min-height:100vh}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-thumb{background:#1a2e44;border-radius:2px}
+    input::placeholder{color:#1e3a55}
+    select{appearance:none;cursor:pointer}
+    .btn{transition:all .15s;cursor:pointer;border:none;outline:none}
+    .btn:hover{filter:brightness(1.15)}
+    .prow{transition:background .1s}
+    .prow:hover{background:rgba(255,255,255,0.04)!important}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- ═══ STEP 1: PASTE YOUR FIREBASE CONFIG HERE ═════════════════════════════
+     Get this from: Firebase Console → Project Settings → Your Apps → SDK setup
+     Replace ALL values below with your real values.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+const FIREBASE_CONFIG = {
+  apiKey:            "PASTE_YOUR_API_KEY_HERE",
+  authDomain:        "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "PASTE_YOUR_PROJECT_ID",
+  storageBucket:     "PASTE_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId:             "PASTE_YOUR_APP_ID"
+};
+</script>
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db = firebase.firestore();
+  // Enable offline persistence so app works without internet after first load
+  db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  window.__db = db;
+</script>
+
+<!-- React + Babel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+
+const { useState, useMemo, useEffect } = React;
+
+// ── Firestore fetch ─────────────────────────────────────────────────────────
+async function fetchPlayers(db) {
+  // Try localStorage cache first for instant load
+  const cached = localStorage.getItem('wc2026_players');
+  const cachedAt = localStorage.getItem('wc2026_cached_at');
+  const ONE_HOUR = 60 * 60 * 1000;
+  if (cached && cachedAt && Date.now() - Number(cachedAt) < ONE_HOUR) {
+    return JSON.parse(cached);
+  }
+  const snapshot = await db.collection('players').get();
+  const players = snapshot.docs.map(d => d.data());
+  players.sort((a,b) => a.id - b.id);
+  // Cache it
+  try {
+    localStorage.setItem('wc2026_players', JSON.stringify(players));
+    localStorage.setItem('wc2026_cached_at', String(Date.now()));
+  } catch(e) {}
+  return players;
+}
+
+// ── Loading screen ──────────────────────────────────────────────────────────
+function LoadingScreen({ error }) {
+  return (
+    <div style={{
+      minHeight:'100vh', background:'#05080f', display:'flex',
+      flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16
+    }}>
+      <div style={{
+        background:'linear-gradient(135deg,#f59e0b,#ef4444)', borderRadius:10,
+        padding:'8px 20px', fontFamily:"'Bebas Neue',sans-serif",
+        fontSize:28, letterSpacing:4, color:'#fff'
+      }}>WC 2026</div>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:3,color:'#3d6080'}}>
+        PLAYER STATISTICS
+      </div>
+      {error ? (
+        <div style={{color:'#ef4444',fontSize:13,maxWidth:300,textAlign:'center',lineHeight:1.7}}>
+          ⚠️ {error}<br/>
+          <span style={{color:'#4a6a88',fontSize:11}}>
+            Check your Firebase config in index.html and Firestore rules.
+          </span>
+        </div>
+      ) : (
+        <div style={{display:'flex',gap:6}}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{
+              width:8,height:8,borderRadius:'50%',background:'#f59e0b',
+              animation:'pulse 1s infinite', animationDelay:`${i*0.2}s`
+            }}/>
+          ))}
+        </div>
+      )}
+      <style>{`@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}`}</style>
+    </div>
+  );
+}
+
+
+const FLAGS = {
+  "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","France":"🇫🇷","Germany":"🇩🇪","Spain":"🇪🇸","Portugal":"🇵🇹",
+  "Netherlands":"🇳🇱","Belgium":"🇧🇪","Croatia":"🇭🇷","Norway":"🇳🇴","Switzerland":"🇨🇭",
+  "Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Austria":"🇦🇹","Hungary":"🇭🇺","Slovenia":"🇸🇮","Ukraine":"🇺🇦",
+  "Argentina":"🇦🇷","Brazil":"🇧🇷","Uruguay":"🇺🇾","Colombia":"🇨🇴","Ecuador":"🇪🇨",
+  "USA":"🇺🇸","Canada":"🇨🇦","Mexico":"🇲🇽","Japan":"🇯🇵","South Korea":"🇰🇷",
+  "Morocco":"🇲🇦","Nigeria":"🇳🇬","Egypt":"🇪🇬","Ghana":"🇬🇭","Italy":"🇮🇹",
+  "Wales":"🏴󠁧󠁢󠁷󠁬󠁳󠁿","Poland":"🇵🇱","Guinea":"🇬🇳","Sweden":"🇸🇪",
+  "Senegal":"🇸🇳","Algeria":"🇩🇿","Ivory Coast":"🇨🇮","Turkiye":"🇹🇷",
+  "Czechia":"🇨🇿","Bosnia":"🇧🇦","Paraguay":"🇵🇾","South Korea":"🇰🇷",
+};
+
+const POS_COLORS = { GK:"#f59e0b", DEF:"#3b82f6", MID:"#10b981", FWD:"#ef4444" };
+const STAT_TABS = [
+  { key:"goals",   label:"Goals",        icon:"⚽", color:"#f59e0b" },
+  { key:"assists", label:"Assists",      icon:"🎯", color:"#10b981" },
+  { key:"shots",   label:"Shots",        icon:"🔫", color:"#3b82f6" },
+  { key:"cs",      label:"Clean Sheets", icon:"🧤", color:"#8b5cf6" },
+  { key:"saves",   label:"Saves",        icon:"🛡️", color:"#ec4899" },
+  { key:"yc",      label:"Yellow Cards", icon:"🟨", color:"#eab308" },
+  { key:"rc",      label:"Red Cards",    icon:"🟥", color:"#dc2626" },
+  { key:"mins",    label:"Minutes",      icon:"⏱️", color:"#06b6d4" },
+];
+const SOURCE_TABS = [
+  { key:"all",  label:"All",           desc:"League + International" },
+  { key:"club", label:"League",        desc:"Club league only" },
+  { key:"intl", label:"International", desc:"WC qualifiers & friendlies" },
+];
+const POSITIONS = ["All","GK","DEF","MID","FWD"];
+
+function getStats(p, source) {
+  const c = {
+    goals: p.club_goals||0, assists: p.club_assists||0, shots: p.club_shots||0,
+    cs: p.club_cs||0, saves: p.club_saves||0, yc: p.club_yc||0,
+    rc: p.club_rc||0, mins: p.club_mins||0,
+  };
+  const i = {
+    goals: p.intl_goals||0, assists: p.intl_assists||0, shots: p.intl_shots||0,
+    cs: p.intl_cs||0, saves: p.intl_saves||0, yc: p.intl_yc||0,
+    rc: p.intl_rc||0, mins: p.intl_mins||0,
+  };
+  if (source === "club") return c;
+  if (source === "intl") return i;
+  return {
+    goals:   c.goals   + i.goals,
+    assists: c.assists  + i.assists,
+    shots:   c.shots   + i.shots,
+    cs:      c.cs      + i.cs,
+    saves:   c.saves   + i.saves,
+    yc:      c.yc      + i.yc,
+    rc:      c.rc      + i.rc,
+    mins:    c.mins    + i.mins,
+  };
+}
+
+function fmtMins(m) {
+  if (!m) return "0'";
+  if (m >= 1000) return `${(m / 1000).toFixed(1)}k'`;
+  return `${m}'`;
+}
+
+function Flag({ c, size = 15 }) {
+  return <span style={{ fontSize: size, lineHeight: 1 }}>{FLAGS[c] || "🏳️"}</span>;
+}
+function PosBadge({ p }) {
+  const col = POS_COLORS[p];
+  return (
+    <span style={{
+      background: `${col}18`, color: col,
+      border: `1px solid ${col}40`,
+      borderRadius: 4, padding: "2px 6px",
+      fontSize: 10, fontWeight: 800, letterSpacing: 0.6,
+    }}>{p}</span>
+  );
+}
+function Bar({ value, max, color }) {
+  return (
+    <div style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 3, height: 5, overflow: "hidden" }}>
+      <div style={{ width: `${max > 0 ? (value / max) * 100 : 0}%`, height: "100%", background: color, transition: "width .5s" }} />
+    </div>
+  );
+}
+function StatCell({ label, value, active, color }) {
+  return (
+    <div style={{ textAlign: "center", minWidth: 30 }}>
+      <div style={{ fontSize: 9, color: "#1a3050", letterSpacing: 1, textTransform: "uppercase", marginBottom: 1 }}>{label}</div>
+      <div style={{ color: active ? color : "#3d6080", fontWeight: active ? 700 : 400, fontSize: 13 }}>{value}</div>
+    </div>
+  );
+}
+
+function App({ players: PLAYERS }) {
+  const [stat,    setStat]    = useState("goals");
+  const [source,  setSource]  = useState("all");
+  const [pos,     setPos]     = useState("All");
+  const [country, setCountry] = useState("All");
+  const [q,       setQ]       = useState("");
+  const [sortKey, setSortKey] = useState("goals");
+  const [sortDir, setSortDir] = useState("desc");
+
+  const ct = STAT_TABS.find(t => t.key === stat);
+
+  const allCountries = useMemo(() =>
+    ["All", ...Array.from(new Set(PLAYERS.map(p => p.country))).sort()], []);
+
+  const rows = useMemo(() => {
+    let d = PLAYERS;
+    if (pos !== "All")     d = d.filter(p => p.pos === pos);
+    if (country !== "All") d = d.filter(p => p.country === country);
+    if (q.trim())          d = d.filter(p =>
+      p.name.toLowerCase().includes(q.toLowerCase()) ||
+      p.team.toLowerCase().includes(q.toLowerCase()) ||
+      p.country.toLowerCase().includes(q.toLowerCase())
+    );
+    return d.map(p => ({ ...p, s: getStats(p, source) }))
+            .sort((a, b) => sortDir === "desc" ? b.s[sortKey] - a.s[sortKey] : a.s[sortKey] - b.s[sortKey]);
+  }, [stat, source, pos, country, q, sortKey, sortDir]);
+
+  const maxStat = useMemo(() => {
+    const all = PLAYERS.map(p => getStats(p, source));
+    return {
+      goals:   Math.max(...all.map(s => s.goals),   1),
+      assists: Math.max(...all.map(s => s.assists),  1),
+      shots:   Math.max(...all.map(s => s.shots),    1),
+      cs:      Math.max(...all.map(s => s.cs),       1),
+      saves:   Math.max(...all.map(s => s.saves),    1),
+      yc:      Math.max(...all.map(s => s.yc),       1),
+      rc:      Math.max(...all.map(s => s.rc),       1),
+      mins:    Math.max(...all.map(s => s.mins),     1),
+    };
+  }, [source]);
+
+  const handleSort = key => {
+    if (sortKey === key) setSortDir(d => d === "desc" ? "asc" : "desc");
+    else { setSortKey(key); setSortDir("desc"); }
+  };
+  const handleStatTab = key => { setStat(key); setSortKey(key); setSortDir("desc"); };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#05080f", color:"#dce8f4", fontFamily:"'DM Sans','Segoe UI',sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap'); *{box-sizing:border-box;margin:0;padding:0} ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#1a2e44;border-radius:2px} input::placeholder{color:#1e3a55} select{appearance:none;cursor:pointer} .btn{transition:all .15s;cursor:pointer;border:none;outline:none} .btn:hover{filter:brightness(1.15)} .prow{transition:background .1s} .prow:hover{background:rgba(255,255,255,0.04)!important}`}</style>
+
+      {/* HEADER */}
+      <div style={{ background:"linear-gradient(160deg,#091525,#0c1f36)", borderBottom:"1px solid #0e2035", padding:"20px 16px 18px" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
+          <div style={{ background:"linear-gradient(135deg,#f59e0b,#ef4444)", borderRadius:8, padding:"6px 14px", fontFamily:"'Bebas Neue'", fontSize:20, letterSpacing:3, color:"#fff", flexShrink:0 }}>WC 2026</div>
+          <div>
+            <h1 style={{ fontFamily:"'Bebas Neue'", fontSize:24, letterSpacing:2, background:"linear-gradient(135deg,#edf4ff,#7fa8cc)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              PLAYER STATISTICS — 2025/26 SEASON
+            </h1>
+            <p style={{ color:"#1e3a55", fontSize:10.5, marginTop:2 }}>
+              {rows.length} of {PLAYERS.length} players · Club ~MD28-30 · International: WC Qualifiers Sep–Nov 2025 + Mar 2026 Friendlies
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"14px 10px 48px" }}>
+
+        {/* SOURCE FILTER */}
+        <div style={{ display:"flex", gap:6, marginBottom:12 }}>
+          {SOURCE_TABS.map(t => (
+            <button key={t.key} className="btn" onClick={() => setSource(t.key)} style={{
+              padding:"8px 18px", borderRadius:8,
+              background: source === t.key ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)",
+              outline: source === t.key ? "1.5px solid rgba(255,255,255,0.3)" : "1.5px solid #0e2035",
+              color: source === t.key ? "#dce8f4" : "#3d6080",
+              fontWeight: source === t.key ? 700 : 400, fontSize:13,
+            }}>
+              {t.label}<span style={{ marginLeft:6, fontSize:10, opacity:0.5 }}>{t.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* STAT TABS */}
+        <div style={{ display:"flex", gap:5, marginBottom:12, flexWrap:"wrap" }}>
+          {STAT_TABS.map(t => (
+            <button key={t.key} className="btn" onClick={() => handleStatTab(t.key)} style={{
+              padding:"7px 14px", borderRadius:8,
+              background: stat === t.key ? `${t.color}15` : "rgba(255,255,255,0.04)",
+              outline: stat === t.key ? `1.5px solid ${t.color}` : "1.5px solid transparent",
+              color: stat === t.key ? t.color : "#3d6080",
+              fontWeight: stat === t.key ? 700 : 500, fontSize:12,
+            }}>{t.icon} {t.label}</button>
+          ))}
+        </div>
+
+        {/* FILTERS */}
+        <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center", background:"rgba(255,255,255,0.02)", border:"1px solid #0e2035", borderRadius:10, padding:"9px 12px" }}>
+          <div style={{ position:"relative" }}>
+            <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", color:"#1e3a55", fontSize:13 }}>🔍</span>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search player or club…"
+              style={{ background:"rgba(255,255,255,0.05)", border:"1px solid #0e2035", borderRadius:7, padding:"6px 10px 6px 30px", color:"#dce8f4", fontSize:12.5, width:195, outline:"none" }} />
+          </div>
+          <div style={{ width:1, height:20, background:"#0e2035" }} />
+          <div style={{ display:"flex", gap:3, alignItems:"center" }}>
+            <span style={{ color:"#1e3a55", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>Pos</span>
+            {POSITIONS.map(p => (
+              <button key={p} className="btn" onClick={() => setPos(p)} style={{
+                padding:"4px 9px", borderRadius:6,
+                background: pos === p ? `${POS_COLORS[p] || "#94a3b8"}18` : "transparent",
+                outline: pos === p ? `1.5px solid ${POS_COLORS[p] || "#4a6580"}` : "1.5px solid transparent",
+                color: pos === p ? (POS_COLORS[p] || "#dce8f4") : "#3d6080",
+                fontWeight: pos === p ? 700 : 400, fontSize:12,
+              }}>{p}</button>
+            ))}
+          </div>
+          <div style={{ width:1, height:20, background:"#0e2035" }} />
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <span style={{ color:"#1e3a55", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>Country</span>
+            <div style={{ position:"relative" }}>
+              <select value={country} onChange={e => setCountry(e.target.value)} style={{
+                background:"rgba(255,255,255,0.06)", border:"1px solid #0e2035", borderRadius:7,
+                padding:"5px 26px 5px 9px", color: country !== "All" ? "#dce8f4" : "#5a7a99",
+                fontSize:12.5, outline:"none", minWidth:155,
+                fontWeight: country !== "All" ? 600 : 400,
+              }}>
+                {allCountries.map(c => (
+                  <option key={c} value={c} style={{ background:"#0c1f36" }}>
+                    {c === "All" ? "All Countries" : `${FLAGS[c] || "🏳️"} ${c}`}
+                  </option>
+                ))}
+              </select>
+              <span style={{ position:"absolute", right:7, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", color:"#1e3a55" }}>▾</span>
+            </div>
+            {country !== "All" && (
+              <button className="btn" onClick={() => setCountry("All")} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid #0e2035", borderRadius:6, padding:"3px 7px", color:"#5a7a99", fontSize:10.5 }}>✕</button>
+            )}
+          </div>
+          <span style={{ color:"#1a3050", fontSize:11, marginLeft:"auto" }}>{rows.length} of {PLAYERS.length} players</span>
+        </div>
+
+        {/* TABLE */}
+        <div style={{ background:"rgba(255,255,255,0.015)", border:"1px solid #0e2035", borderRadius:12, overflow:"hidden" }}>
+          {rows.length === 0 && (
+            <div style={{ textAlign:"center", padding:"60px", color:"#1e3a55" }}>No players match your filters.</div>
+          )}
+          {rows.map((p, i) => {
+            const s = p.s;
+            const sortVal = s[sortKey] ?? s[stat] ?? 0;
+            return (
+              <div key={p.id} className="prow" style={{
+                padding:"9px 12px",
+                borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)",
+                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+              }}>
+                {/* Row 1 */}
+                <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:5 }}>
+                  <span style={{ color:"#1a3050", fontWeight:700, fontSize:11.5, minWidth:26, textAlign:"right", flexShrink:0 }}>{i + 1}</span>
+                  <span style={{ fontWeight:700, fontSize:13.5, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</span>
+                  <Flag c={p.country} />
+                  <span style={{ color:"#4a6a88", fontSize:11.5, flexShrink:0 }}>{p.country}</span>
+                  <PosBadge p={p.pos} />
+                </div>
+                {/* Row 2 */}
+                <div style={{ display:"flex", alignItems:"center", gap:8, paddingLeft:35 }}>
+                  <span style={{ fontSize:10.5, color:"#1e3a55", flex:"0 1 150px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                    {p.team} · {p.league}
+                  </span>
+                  <span
+                    onClick={() => handleSort("mins")}
+                    style={{
+                      fontSize:10, cursor:"pointer",
+                      color: sortKey === "mins" ? "#06b6d4" : "#2d4a60",
+                      fontWeight: sortKey === "mins" ? 700 : 400,
+                      background:"rgba(6,182,212,0.07)", border:"1px solid rgba(6,182,212,0.15)",
+                      borderRadius:4, padding:"1px 6px", flexShrink:0,
+                    }}>⏱ {fmtMins(s.mins)}</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0, marginLeft:"auto" }}>
+                    <StatCell label="G"  value={s.goals}   active={sortKey==="goals"}   color={ct.color} />
+                    <StatCell label="A"  value={s.assists}  active={sortKey==="assists"} color={ct.color} />
+                    <StatCell label="CS" value={s.cs}       active={sortKey==="cs"}      color={ct.color} />
+                    <StatCell label="Sv" value={s.saves}    active={sortKey==="saves"}   color={ct.color} />
+                    <StatCell label="🟨" value={s.yc}       active={sortKey==="yc"}      color="#eab308" />
+                    <StatCell label="🟥" value={s.rc}       active={sortKey==="rc"}      color="#dc2626" />
+                    <div style={{ display:"flex", alignItems:"center", gap:7, width:155 }}>
+                      <span style={{
+                        color:ct.color, fontWeight:800,
+                        fontSize: stat === "mins" ? 14 : 21,
+                        fontFamily:"'Bebas Neue'", minWidth:32, lineHeight:1, textAlign:"right",
+                      }}>{stat === "mins" ? fmtMins(s.mins) : sortVal}</span>
+                      <Bar value={sortVal} max={maxStat[stat]} color={ct.color} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* DISCLAIMER */}
+        <div style={{ marginTop:14, background:"rgba(245,158,11,0.04)", border:"1px solid rgba(245,158,11,0.1)", borderRadius:9, padding:"9px 12px", fontSize:10.5, color:"#78350f", lineHeight:1.8 }}>
+          <strong>⚠️ Data:</strong> Club: Football365/Bundesliga.com/classementlaliga.com ~MD28-30 (Mar 2026).
+          International: ESPN squad pages (Italy 23 confirmed, France 23, Spain 22), englandfootball.com, UEFA.com — WC qualifiers Sep–Nov 2025 + Mar 2026 friendlies.
+          Minutes played estimated from confirmed appearances.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ── Root component with Firestore loading ───────────────────────────────────
+function Root() {
+  const [players, setPlayers] = React.useState(null);
+  const [error,   setError]   = React.useState(null);
+
+  React.useEffect(() => {
+    fetchPlayers(window.__db)
+      .then(setPlayers)
+      .catch(e => setError(e.message));
+  }, []);
+
+  if (!players && !error) return React.createElement(LoadingScreen, { error: null });
+  if (error)              return React.createElement(LoadingScreen, { error });
+  return React.createElement(App, { players });
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(Root)
+);
+
+</script>
+
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

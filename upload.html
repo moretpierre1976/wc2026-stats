@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>WC 2026 — Upload Players Spreadsheet</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,sans-serif;background:#05080f;color:#dce8f4;
+         min-height:100vh;padding:24px 16px}
+    .wrap{max-width:520px;margin:0 auto}
+    h1{font-size:22px;font-weight:800;color:#f59e0b;margin-bottom:4px}
+    .sub{font-size:13px;color:#4a6a88;margin-bottom:24px;line-height:1.6}
+    /* Config box */
+    .box{background:#0c1520;border:1px solid #1e3a55;border-radius:12px;
+         padding:18px;margin-bottom:16px}
+    .box h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;
+            color:#f59e0b;margin-bottom:14px}
+    label{display:block;font-size:11px;color:#4a6a88;text-transform:uppercase;
+          letter-spacing:1px;margin-bottom:4px;margin-top:10px}
+    label:first-of-type{margin-top:0}
+    input{width:100%;background:#070c14;border:1px solid #1e3a55;border-radius:8px;
+          padding:10px 12px;color:#dce8f4;font-size:13px;outline:none}
+    input:focus{border-color:#f59e0b}
+    /* Drop zone */
+    .drop{background:#070c14;border:2px dashed #1e3a55;border-radius:12px;
+          padding:36px 20px;text-align:center;cursor:pointer;
+          transition:all .2s;margin-bottom:16px}
+    .drop.drag{border-color:#f59e0b;background:#0c1520}
+    .drop.has-file{border-color:#10b981;border-style:solid;background:#060f0a}
+    .drop-icon{font-size:36px;margin-bottom:10px}
+    .drop-title{font-size:15px;font-weight:700;color:#7aabc8;margin-bottom:4px}
+    .drop-sub{font-size:12px;color:#2d4a60}
+    .drop.has-file .drop-title{color:#10b981}
+    /* Preview table */
+    .preview{background:#070c14;border:1px solid #1e3a55;border-radius:12px;
+             padding:16px;margin-bottom:16px;display:none}
+    .preview h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;
+                color:#10b981;margin-bottom:12px}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+                margin-bottom:14px}
+    .stat{background:#0c1520;border-radius:8px;padding:10px;text-align:center}
+    .stat-num{font-size:22px;font-weight:800;color:#f59e0b}
+    .stat-lbl{font-size:10px;color:#2d4a60;text-transform:uppercase;
+              letter-spacing:1px;margin-top:2px}
+    .sample{font-size:11px;color:#4a6a88;line-height:1.8;border-top:1px solid #1e3a55;
+            padding-top:12px}
+    .sample span{color:#7aabc8}
+    /* Progress */
+    .prog-wrap{margin-bottom:16px;display:none}
+    .prog-bg{background:#1e3a55;border-radius:6px;height:10px;overflow:hidden}
+    .prog-bar{background:linear-gradient(90deg,#f59e0b,#ef4444);height:10px;
+              width:0%;border-radius:6px;transition:width .3s}
+    .prog-txt{font-size:12px;color:#4a6a88;text-align:center;margin-top:8px}
+    /* Buttons */
+    .btn-upload{width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#ef4444);
+                color:#fff;font-size:16px;font-weight:800;border:none;border-radius:12px;
+                cursor:pointer;display:none;letter-spacing:0.5px}
+    .btn-upload:disabled{opacity:.5;cursor:not-allowed}
+    /* Log */
+    #log{background:#070c14;border:1px solid #1e3a55;border-radius:12px;
+         padding:14px;margin-top:16px;font-size:12px;line-height:2;
+         max-height:260px;overflow-y:auto;display:none}
+    .ok {color:#10b981} .err{color:#ef4444} .info{color:#f59e0b} .dim{color:#2d4a60}
+    /* Download link */
+    .dl{display:flex;align-items:center;gap:10px;background:#0c1520;
+        border:1px solid #1e3a55;border-radius:10px;padding:14px;margin-bottom:16px;
+        text-decoration:none;color:#dce8f4}
+    .dl:hover{border-color:#f59e0b}
+    .dl-icon{font-size:28px}
+    .dl-text{font-size:13px;font-weight:700}
+    .dl-sub{font-size:11px;color:#4a6a88;margin-top:2px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>⚽ WC 2026 — Update Players</h1>
+  <p class="sub">Edit the Excel spreadsheet, then upload it here.<br>
+     All changes go live instantly for every user.</p>
+
+  <!-- Download current template -->
+  <a class="dl" href="WC2026_Players.xlsx" download>
+    <div class="dl-icon">📥</div>
+    <div>
+      <div class="dl-text">Download WC2026_Players.xlsx</div>
+      <div class="dl-sub">Edit this in Numbers (iPhone) or Excel, then upload below</div>
+    </div>
+  </a>
+
+  <!-- Firebase config -->
+  <div class="box">
+    <h2>🔑 Firebase Config (one-time setup)</h2>
+    <label>API Key</label>
+    <input id="apiKey" placeholder="AIzaSy..." autocomplete="off"/>
+    <label>Project ID</label>
+    <input id="projectId" placeholder="wc2026-stats" autocomplete="off"/>
+    <label>App ID</label>
+    <input id="appId" placeholder="1:123456789:web:abc123" autocomplete="off"/>
+    <p style="font-size:11px;color:#1e3a55;margin-top:10px">
+      💡 Tip: save this page to your home screen so you don't have to re-enter these each time.
+    </p>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="drop" id="dropzone"
+       onclick="document.getElementById('fileinput').click()"
+       ondragover="ev(event,'drag')" ondragleave="ev(event,'leave')"
+       ondrop="ev(event,'drop')">
+    <div class="drop-icon" id="dropIcon">📊</div>
+    <div class="drop-title" id="dropTitle">Tap to choose your Excel file</div>
+    <div class="drop-sub" id="dropSub">.xlsx or .csv — edit in Numbers or Excel first</div>
+  </div>
+  <input type="file" id="fileinput" accept=".xlsx,.csv"
+         style="display:none" onchange="fileChosen(this.files[0])"/>
+
+  <!-- Preview -->
+  <div class="preview" id="preview">
+    <h2>📋 Preview — ready to upload</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-num" id="pCount">0</div><div class="stat-lbl">Players</div></div>
+      <div class="stat"><div class="stat-num" id="pNew">0</div><div class="stat-lbl">New / Changed</div></div>
+      <div class="stat"><div class="stat-num" id="pCols">0</div><div class="stat-lbl">Columns</div></div>
+    </div>
+    <div class="sample" id="sample"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-bg"><div class="prog-bar" id="progBar"></div></div>
+    <div class="prog-txt" id="progTxt">Preparing…</div>
+  </div>
+
+  <!-- Upload button -->
+  <button class="btn-upload" id="uploadBtn" onclick="doUpload()">
+    Upload &amp; Sync to Firestore →
+  </button>
+
+  <!-- Log -->
+  <div id="log"></div>
+
+</div>
+
+<!-- SheetJS for Excel reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let parsedPlayers = [];
+let db = null;
+
+// ── Drag & drop ────────────────────────────────────────────────────────────
+function ev(e, type) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (type === 'drag')  dz.classList.add('drag');
+  if (type === 'leave') dz.classList.remove('drag');
+  if (type === 'drop') {
+    dz.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) fileChosen(file);
+  }
+}
+
+// ── File chosen ────────────────────────────────────────────────────────────
+function fileChosen(file) {
+  if (!file) return;
+  document.getElementById('dropTitle').textContent = file.name;
+  document.getElementById('dropSub').textContent   = `${(file.size/1024).toFixed(1)} KB — reading…`;
+  document.getElementById('dropIcon').textContent  = '⏳';
+  document.getElementById('dropzone').classList.add('has-file');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, { type: 'array' });
+
+      // Try "Players" sheet first, else first sheet
+      const sheetName = wb.SheetNames.includes('Players')
+        ? 'Players' : wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+
+      // Get rows — skip row 1 (group header), use row 2 as column names
+      const rows = XLSX.utils.sheet_to_json(ws, {
+        header: 1,
+        defval: 0,
+        blankrows: false
+      });
+
+      // Row index 0 = group header ("PLAYER INFO" / "CLUB STATS" etc)
+      // Row index 1 = column headers (id, name, country…)
+      // Row index 2+ = data
+      const headerRow = rows[1]; // second row
+      const dataRows  = rows.slice(2).filter(r => r[0] && r[0] !== 'id');
+
+      parsedPlayers = dataRows.map(row => {
+        const p = {};
+        headerRow.forEach((h, i) => {
+          if (!h) return;
+          const key = String(h).trim().toLowerCase()
+            .replace(/ /g,'_').replace(/[^a-z0-9_]/g,'');
+          const val = row[i] ?? 0;
+          // Numeric fields
+          const numericKeys = ['id','age','club_goals','club_assists','club_shots',
+            'club_cs','club_saves','club_yc','club_rc','club_mins',
+            'intl_goals','intl_assists','intl_shots','intl_cs','intl_saves',
+            'intl_yc','intl_rc','intl_apps','intl_mins'];
+          p[key] = numericKeys.includes(key) ? (Number(val)||0) : String(val).trim();
+        });
+        return p;
+      }).filter(p => p.id > 0);
+
+      showPreview(file.name, parsedPlayers);
+
+    } catch(err) {
+      log(`Error reading file: ${err.message}`, 'err');
+      document.getElementById('dropTitle').textContent = '⚠️ Could not read file';
+      document.getElementById('dropSub').textContent   = 'Make sure it is .xlsx or .csv';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Show preview ────────────────────────────────────────────────────────────
+function showPreview(fname, players) {
+  document.getElementById('dropIcon').textContent = '✅';
+  document.getElementById('dropSub').textContent  = 'File read successfully';
+
+  document.getElementById('pCount').textContent = players.length;
+  document.getElementById('pNew').textContent   = players.length;
+  document.getElementById('pCols').textContent  =
+    players.length > 0 ? Object.keys(players[0]).length : 0;
+
+  // Sample first 3 players
+  const sample = players.slice(0,3).map(p =>
+    `<span>${p.name}</span> · ${p.country} · ${p.pos} · ${p.team}`
+  ).join('<br/>');
+  document.getElementById('sample').innerHTML =
+    `First few players:<br/>${sample}${players.length > 3 ? `<br/><span style="color:#1e3a55">…and ${players.length-3} more</span>` : ''}`;
+
+  document.getElementById('preview').style.display = 'block';
+  document.getElementById('uploadBtn').style.display = 'block';
+}
+
+// ── Upload to Firestore ────────────────────────────────────────────────────
+async function doUpload() {
+  if (parsedPlayers.length === 0) { alert('No players found in file.'); return; }
+
+  const apiKey    = document.getElementById('apiKey').value.trim();
+  const projectId = document.getElementById('projectId').value.trim();
+  const appId     = document.getElementById('appId').value.trim();
+
+  if (!apiKey || !projectId || !appId) {
+    alert('Please fill in your Firebase config fields first.');
+    return;
+  }
+
+  document.getElementById('uploadBtn').disabled = true;
+  document.getElementById('uploadBtn').textContent = 'Uploading…';
+  document.getElementById('progWrap').style.display = 'block';
+  document.getElementById('log').style.display = 'block';
+
+  // Init Firebase (safe to call multiple times)
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({ apiKey, projectId, appId,
+        authDomain: `${projectId}.firebaseapp.com`,
+        storageBucket: `${projectId}.appspot.com`,
+      });
+    }
+    db = firebase.firestore();
+  } catch(e) {
+    log(`Firebase init error: ${e.message}`, 'err');
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadBtn').textContent = 'Retry Upload';
+    return;
+  }
+
+  log(`Connected to project: <b>${projectId}</b>`, 'info');
+  log(`Uploading ${parsedPlayers.length} players…`, 'info');
+
+  const BATCH_SIZE = 400;
+  let done = 0;
+
+  for (let i = 0; i < parsedPlayers.length; i += BATCH_SIZE) {
+    const chunk = parsedPlayers.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    chunk.forEach(p => {
+      const ref = db.collection('players').doc(String(p.id));
+      batch.set(ref, p); // full replace of each document
+    });
+    try {
+      await batch.commit();
+      done += chunk.length;
+      const pct = Math.round((done / parsedPlayers.length) * 100);
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('progTxt').textContent = `${done} / ${parsedPlayers.length} players uploaded (${pct}%)`;
+      log(`✓ ${done} players synced…`, 'ok');
+    } catch(e) {
+      log(`✗ Upload failed: ${e.message}`, 'err');
+      if (e.message.includes('Missing or insufficient permissions')) {
+        log('Go to Firebase Console → Firestore → Rules and allow write: if true temporarily.', 'err');
+      }
+      document.getElementById('uploadBtn').disabled = false;
+      document.getElementById('uploadBtn').textContent = 'Retry Upload';
+      return;
+    }
+  }
+
+  // Remove players that are in Firestore but NOT in the spreadsheet
+  log('Checking for removed players…', 'dim');
+  const spreadsheetIds = new Set(parsedPlayers.map(p => String(p.id)));
+  const snapshot = await db.collection('players').get();
+  const toDelete = snapshot.docs.filter(d => !spreadsheetIds.has(d.id));
+
+  if (toDelete.length > 0) {
+    const delBatch = db.batch();
+    toDelete.forEach(d => delBatch.delete(d.ref));
+    await delBatch.commit();
+    log(`🗑 Removed ${toDelete.length} players that were deleted from the spreadsheet`, 'info');
+  }
+
+  log('', '');
+  log('🎉 ALL DONE! Firestore is now in sync with your spreadsheet.', 'ok');
+  log('All users will see the updated player list immediately.', 'dim');
+
+  document.getElementById('uploadBtn').textContent = '✓ Upload Complete!';
+  document.getElementById('progTxt').textContent = 'Sync complete ✓';
+}
+
+// ── Log helper ──────────────────────────────────────────────────────────────
+function log(msg, cls='dim') {
+  const d = document.getElementById('log');
+  d.innerHTML += `<div class="${cls}">${msg}</div>`;
+  d.scrollTop = d.scrollHeight;
+}
+</script>
+</body>
+</html>

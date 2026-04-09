@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WC 2026 Stats — Setup Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: #05080f;
+    color: #dce8f4;
+    padding: 0 0 60px;
+    line-height: 1.7;
+  }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(160deg, #091525, #0c1f36);
+    border-bottom: 1px solid #0e2035;
+    padding: 32px 20px 28px;
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    border-radius: 8px; padding: 6px 18px;
+    font-size: 22px; font-weight: 900;
+    letter-spacing: 4px; color: #fff;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 20px; font-weight: 800;
+    color: #dce8f4; margin-bottom: 8px;
+  }
+  .hero p { font-size: 13px; color: #3d6080; }
+
+  /* Content */
+  .content { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+
+  /* Files list */
+  .files-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 24px 0;
+  }
+  .file-card {
+    background: #0c1520;
+    border: 1px solid #1e3a55;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .file-name {
+    font-size: 12px; font-weight: 700;
+    color: #f59e0b; font-family: monospace;
+    margin-bottom: 4px;
+  }
+  .file-desc { font-size: 11px; color: #4a6a88; line-height: 1.5; }
+
+  /* Step container */
+  .step {
+    margin: 28px 0 0;
+    border: 1px solid #1e3a55;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .step-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    flex-shrink: 0;
+  }
+  .step-title { font-size: 17px; font-weight: 800; }
+  .step-sub { font-size: 12px; margin-top: 2px; }
+  .step-body { padding: 0 20px 20px; }
+
+  /* Color themes per step */
+  .s1 .step-header { background: #0c1a10; border-bottom: 1px solid #1a3020; }
+  .s1 .step-num { background: #10b981; color: #fff; }
+  .s1 .step-title { color: #10b981; }
+  .s1 .step-sub { color: #2d6040; }
+
+  .s2 .step-header { background: #0c1520; border-bottom: 1px solid #1e3a55; }
+  .s2 .step-num { background: #3b82f6; color: #fff; }
+  .s2 .step-title { color: #3b82f6; }
+  .s2 .step-sub { color: #1e3a55; }
+
+  .s3 .step-header { background: #1a0c08; border-bottom: 1px solid #3a1e10; }
+  .s3 .step-num { background: #f59e0b; color: #000; }
+  .s3 .step-title { color: #f59e0b; }
+  .s3 .step-sub { color: #4a3010; }
+
+  .s4 .step-header { background: #100c1a; border-bottom: 1px solid #2a1e40; }
+  .s4 .step-num { background: #8b5cf6; color: #fff; }
+  .s4 .step-title { color: #8b5cf6; }
+  .s4 .step-sub { color: #3a2a50; }
+
+  .s5 .step-header { background: #0a1520; border-bottom: 1px solid #1e3050; }
+  .s5 .step-num { background: #06b6d4; color: #000; }
+  .s5 .step-title { color: #06b6d4; }
+  .s5 .step-sub { color: #1e3a50; }
+
+  .s6 .step-header { background: #100a08; border-bottom: 1px solid #301e18; }
+  .s6 .step-num { background: #ef4444; color: #fff; }
+  .s6 .step-title { color: #ef4444; }
+  .s6 .step-sub { color: #401e1e; }
+
+  .s7 .step-header { background: #101a0a; border-bottom: 1px solid #203010; }
+  .s7 .step-num { background: #10b981; color: #fff; }
+  .s7 .step-title { color: #10b981; }
+  .s7 .step-sub { color: #203010; }
+
+  .done .step-header { background: linear-gradient(135deg, #0c1a10, #0a1020); border-bottom: 1px solid #1e3055; }
+  .done .step-num { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 20px; }
+  .done .step-title { color: #f59e0b; font-size: 19px; }
+  .done .step-sub { color: #3d6080; }
+
+  /* Action items */
+  .actions { margin-top: 14px; }
+  .action {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #0e2035;
+    align-items: flex-start;
+  }
+  .action:last-child { border-bottom: none; }
+  .action-num {
+    width: 22px; height: 22px;
+    background: #1e3a55;
+    border-radius: 50%;
+    font-size: 11px; font-weight: 800;
+    color: #4a6a88;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .action-text { font-size: 13px; color: #7aabc8; flex: 1; }
+  .action-text strong { color: #dce8f4; }
+  .action-text em { color: #f59e0b; font-style: normal; font-weight: 700; }
+
+  /* Code block */
+  .code {
+    background: #070c14;
+    border: 1px solid #1e3a55;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #10b981;
+    margin: 10px 0;
+    word-break: break-all;
+    line-height: 1.8;
+  }
+  .code .comment { color: #2d4a60; }
+  .code .highlight { color: #f59e0b; font-weight: 700; }
+
+  /* Tip box */
+  .tip {
+    background: #0a1520;
+    border-left: 3px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #4a6a88;
+  }
+  .tip strong { color: #3b82f6; }
+
+  .warn {
+    background: #120a08;
+    border-left: 3px solid #ef4444;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #6a3a30;
+  }
+  .warn strong { color: #ef4444; }
+
+  /* Screenshot placeholder */
+  .screen {
+    background: #070c14;
+    border: 1px solid #1e3a55;
+    border-radius: 10px;
+    padding: 14px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #3d6080;
+    text-align: center;
+  }
+  .screen .icon { font-size: 28px; margin-bottom: 6px; }
+  .screen .label { color: #4a6a88; font-weight: 700; }
+
+  /* Update workflow */
+  .workflow {
+    display: flex;
+    gap: 0;
+    margin: 16px 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .wf-step {
+    background: #0c1520;
+    border: 1px solid #1e3a55;
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+  .wf-icon { font-size: 22px; margin-bottom: 4px; }
+  .wf-label { font-size: 11px; color: #4a6a88; font-weight: 700; }
+  .wf-arrow { color: #1e3a55; font-size: 20px; padding: 0 2px; }
+
+  /* Section divider */
+  .divider {
+    text-align: center;
+    color: #1e3a55;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 32px 0 8px;
+  }
+
+  /* Congrats banner */
+  .congrats {
+    background: linear-gradient(135deg, #0c1a10, #0a1525);
+    border: 1px solid #1e3a55;
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    margin-top: 28px;
+  }
+  .congrats .big { font-size: 36px; margin-bottom: 10px; }
+  .congrats h2 { font-size: 20px; color: #f59e0b; margin-bottom: 8px; }
+  .congrats p { font-size: 13px; color: #4a6a88; }
+
+  section-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #1e3a55;
+    margin: 24px 0 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="badge">WC 2026</div>
+  <h1>Player Stats App — Complete Setup Guide</h1>
+  <p>Follow these steps in order · Everything done from your iPhone · All services are free</p>
+</div>
+
+<div class="content">
+
+  <!-- Files overview -->
+  <div class="divider">What's in this folder</div>
+  <div class="files-grid">
+    <div class="file-card">
+      <div class="file-name">index.html</div>
+      <div class="file-desc">The main app. Shows all players. Reads data from Firestore.</div>
+    </div>
+    <div class="file-card">
+      <div class="file-name">WC2026_Players.xlsx</div>
+      <div class="file-desc">Excel spreadsheet with all 295 players. Edit this to update stats.</div>
+    </div>
+    <div class="file-card">
+      <div class="file-name">import.html</div>
+      <div class="file-desc">One-time tool. Loads all 295 players into Firestore on first setup.</div>
+    </div>
+    <div class="file-card">
+      <div class="file-name">upload.html</div>
+      <div class="file-desc">Upload an edited Excel file to update Firestore anytime.</div>
+    </div>
+    <div class="file-card">
+      <div class="file-name">manifest.json + sw.js</div>
+      <div class="file-desc">Make the app installable as a PWA on any phone.</div>
+    </div>
+    <div class="file-card">
+      <div class="file-name">icon-192.png / 512.png</div>
+      <div class="file-desc">App icon that appears on the home screen.</div>
+    </div>
+  </div>
+
+  <div class="tip">
+    <strong>Before you start:</strong> You need three free accounts.
+    Create them now if you don't have them —
+    <strong>github.com</strong> · <strong>firebase.google.com</strong> · <strong>vercel.com</strong>
+  </div>
+
+  <!-- ═══ STEP 1 ═══ -->
+  <div class="step s1">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Upload all files to GitHub</div>
+        <div class="step-sub">This is where your files are stored online</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Open Safari → go to <em>github.com</em> → sign in</div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Tap the <strong>+</strong> button (top right) → <strong>New repository</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Name it <em>wc2026-stats</em> · Set to <strong>Public</strong> · Tick <strong>Add a README file</strong> · Tap <strong>Create repository</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">Inside your new repo, tap <strong>Add file</strong> → <strong>Upload files</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">5</div>
+          <div class="action-text">Tap <strong>choose your files</strong> → go to the unzipped folder in Files → <strong>select all 8 files</strong> (hold select to pick multiple)</div>
+        </div>
+        <div class="action">
+          <div class="action-num">6</div>
+          <div class="action-text">Scroll down → tap <strong>Commit changes</strong></div>
+        </div>
+      </div>
+      <div class="tip"><strong>✓ Done when:</strong> You can see all 8 files listed in your GitHub repo.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2 ═══ -->
+  <div class="step s2">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Create a Firebase project &amp; Firestore database</div>
+        <div class="step-sub">This is where your player data lives</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Open Safari → go to <em>console.firebase.google.com</em> → sign in with Google</div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Tap <strong>Add project</strong> → name it <em>wc2026-stats</em> → tap <strong>Continue</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Turn <strong>off</strong> Google Analytics → tap <strong>Create project</strong> → wait → tap <strong>Continue</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">In the left menu tap <strong>Firestore Database</strong> → tap <strong>Create database</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">5</div>
+          <div class="action-text">Choose <strong>Start in test mode</strong> → tap <strong>Next</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">6</div>
+          <div class="action-text">Select a location (choose the one nearest to you) → tap <strong>Enable</strong></div>
+        </div>
+      </div>
+      <div class="tip"><strong>✓ Done when:</strong> You see an empty Firestore database screen.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3 ═══ -->
+  <div class="step s3">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Get your Firebase config keys</div>
+        <div class="step-sub">You will paste these into 2 files — screenshot this screen</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">In Firebase Console, tap the <strong>⚙️ gear icon</strong> (top left) → <strong>Project settings</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Scroll down to <strong>Your apps</strong> → tap the <strong>&lt;/&gt;</strong> web icon → name it <em>wc2026-web</em> → tap <strong>Register app</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text"><strong>Take a screenshot</strong> of the config block that appears. It looks like this:</div>
+        </div>
+      </div>
+      <div class="code">
+        apiKey: "<span class="highlight">AIzaSyXXXXXXXXXXXX</span>",<br/>
+        authDomain: "<span class="highlight">wc2026-stats.firebaseapp.com</span>",<br/>
+        projectId: "<span class="highlight">wc2026-stats</span>",<br/>
+        storageBucket: "<span class="highlight">wc2026-stats.appspot.com</span>",<br/>
+        messagingSenderId: "<span class="highlight">123456789012</span>",<br/>
+        appId: "<span class="highlight">1:123456789012:web:abc123def456</span>"
+      </div>
+      <div class="warn"><strong>Important:</strong> Keep this screen open or screenshot it. You need these values in Step 4.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4 ═══ -->
+  <div class="step s4">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Add your config to index.html and upload.html</div>
+        <div class="step-sub">Do this for both files on GitHub</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Go to <em>github.com</em> → your <em>wc2026-stats</em> repo → tap <strong>index.html</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Tap the <strong>pencil icon</strong> to edit</div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Find this section (around line 30) and replace every <em>PASTE_YOUR_...</em> with your real values from Step 3:</div>
+        </div>
+      </div>
+      <div class="code">
+        <span class="comment">Find this:</span><br/>
+        apiKey: "<span class="highlight">PASTE_YOUR_API_KEY_HERE</span>",<br/>
+        projectId: "<span class="highlight">PASTE_YOUR_PROJECT_ID</span>",<br/><br/>
+        <span class="comment">Replace with your real values, e.g.:</span><br/>
+        apiKey: "AIzaSyXXXXXXXXX",<br/>
+        projectId: "wc2026-stats",
+      </div>
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">Tap <strong>Commit changes</strong> when done</div>
+        </div>
+        <div class="action">
+          <div class="action-num">5</div>
+          <div class="action-text">Now go back to your repo → tap <strong>upload.html</strong> → tap the pencil → find and replace the same <em>PASTE_YOUR_...</em> placeholders → tap <strong>Commit changes</strong></div>
+        </div>
+      </div>
+      <div class="tip"><strong>✓ Done when:</strong> Both files updated and committed on GitHub.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 5 ═══ -->
+  <div class="step s5">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Deploy with Vercel — get your live URL</div>
+        <div class="step-sub">Vercel reads your GitHub and puts it live on the internet</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Open Safari → go to <em>vercel.com</em> → tap <strong>Sign up</strong> → tap <strong>Continue with GitHub</strong> → authorise</div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Tap <strong>Add New Project</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">You will see <em>wc2026-stats</em> in the list → tap <strong>Import</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">Leave everything as default → tap <strong>Deploy</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">5</div>
+          <div class="action-text">Wait about 30 seconds → you see a 🎉 screen with your URL</div>
+        </div>
+      </div>
+      <div class="code">
+        Your live URL will be something like:<br/>
+        <span class="highlight">https://wc2026-stats.vercel.app</span>
+      </div>
+      <div class="tip"><strong>Save this URL</strong> — this is what you share with people and what they install on their phone.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 6 ═══ -->
+  <div class="step s6">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">Import all 295 players into Firestore</div>
+        <div class="step-sub">Do this once only — takes about 15 seconds</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">In Safari, go to your URL with <em>/import.html</em> at the end:<br/>
+            e.g. <strong>https://wc2026-stats.vercel.app/import.html</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Fill in the three boxes using your values from Step 3:<br/>
+            <strong>API Key</strong> · <strong>Project ID</strong> · <strong>App ID</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Tap <strong>Import All 295 Players →</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">Watch the progress bar fill up → wait for <strong>🎉 ALL 295 PLAYERS IMPORTED</strong></div>
+        </div>
+      </div>
+      <div class="tip"><strong>✓ Done when:</strong> You see the success message. Your app now has all players.</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 7 ═══ -->
+  <div class="step s7">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div>
+        <div class="step-title">Lock your database so no one else can change it</div>
+        <div class="step-sub">Takes 1 minute — important for security</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Go to <em>console.firebase.google.com</em> → your project → <strong>Firestore Database</strong> → tap the <strong>Rules</strong> tab</div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">You will see existing rules. <strong>Select all the text</strong> and replace it with exactly this:</div>
+        </div>
+      </div>
+      <div class="code">
+        rules_version = '2';<br/>
+        service cloud.firestore {<br/>
+        &nbsp;&nbsp;match /databases/{database}/documents {<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;match /players/{id} {<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read: if true;<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow write: if false;<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;}<br/>
+        }
+      </div>
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Tap <strong>Publish</strong></div>
+        </div>
+      </div>
+      <div class="tip"><strong>What this means:</strong> Anyone can read (see the players in the app) but nobody can change the data — only you, using the upload tool.</div>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div class="congrats">
+    <div class="big">🎉</div>
+    <h2>Your app is live!</h2>
+    <p>Share this URL with anyone:<br/>
+      <strong style="color:#f59e0b">https://wc2026-stats.vercel.app</strong><br/><br/>
+      They open it in Safari → tap Share → <strong>Add to Home Screen</strong><br/>
+      The WC 2026 icon appears on their phone like a native app.
+    </p>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider" style="margin-top:40px">Updating players going forward</div>
+
+  <!-- Update workflow -->
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-icon">📊</div>
+      <div class="wf-label">Edit Excel</div>
+    </div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">
+      <div class="wf-icon">📤</div>
+      <div class="wf-label">Upload file</div>
+    </div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">
+      <div class="wf-icon">✅</div>
+      <div class="wf-label">Live instantly</div>
+    </div>
+  </div>
+
+  <div class="step s2" style="margin-top:16px">
+    <div class="step-header">
+      <div class="step-num">📊</div>
+      <div>
+        <div class="step-title">How to update player stats</div>
+        <div class="step-sub">Edit Excel → upload → done. No code needed ever again.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-num">1</div>
+          <div class="action-text">Open Safari → go to your URL with <em>/upload.html</em>:<br/>
+            <strong>https://wc2026-stats.vercel.app/upload.html</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">2</div>
+          <div class="action-text">Tap <strong>Download WC2026_Players.xlsx</strong> at the top of that page to get the latest version of the spreadsheet</div>
+        </div>
+        <div class="action">
+          <div class="action-num">3</div>
+          <div class="action-text">Open the downloaded file — it opens in <strong>Numbers</strong> on iPhone automatically</div>
+        </div>
+        <div class="action">
+          <div class="action-num">4</div>
+          <div class="action-text">Edit any stats. <strong>Add a new row</strong> to add a player. <strong>Delete a row</strong> to remove a player. Give new players a unique ID number.</div>
+        </div>
+        <div class="action">
+          <div class="action-num">5</div>
+          <div class="action-text">In Numbers: tap <strong>···</strong> (top right) → <strong>Export</strong> → <strong>Excel</strong> → save to Files</div>
+        </div>
+        <div class="action">
+          <div class="action-num">6</div>
+          <div class="action-text"><strong>Before uploading</strong> — go to Firebase Console → Firestore → Rules → change <em>allow write: if false</em> to <em>allow write: if true</em> → tap Publish</div>
+        </div>
+        <div class="action">
+          <div class="action-num">7</div>
+          <div class="action-text">Back on the upload page — fill in your 3 Firebase config values → tap <strong>Tap to choose your Excel file</strong> → pick the file → tap <strong>Upload &amp; Sync to Firestore →</strong></div>
+        </div>
+        <div class="action">
+          <div class="action-num">8</div>
+          <div class="action-text">After upload completes → go back to Firebase Console → Rules → change back to <em>allow write: if false</em> → tap Publish</div>
+        </div>
+      </div>
+      <div class="tip"><strong>That's it.</strong> All users see the updated stats instantly. No redeployment, no GitHub, no code.</div>
+    </div>
+  </div>
+
+  <!-- Quick reference -->
+  <div class="step s3" style="margin-top:24px">
+    <div class="step-header">
+      <div class="step-num">📌</div>
+      <div>
+        <div class="step-title">Quick reference — your important URLs</div>
+        <div class="step-sub">Bookmark these in Safari</div>
+      </div>
+    </div>
+    <div class="step-body" style="padding-top:16px">
+      <div class="code">
+        <span class="comment"># Your app (share this with everyone)</span><br/>
+        https://wc2026-stats.vercel.app<br/><br/>
+        <span class="comment"># Upload updated Excel file</span><br/>
+        https://wc2026-stats.vercel.app/upload.html<br/><br/>
+        <span class="comment"># Firebase Console (manage database)</span><br/>
+        console.firebase.google.com<br/><br/>
+        <span class="comment"># GitHub (your files are stored here)</span><br/>
+        github.com/YOURUSERNAME/wc2026-stats
+      </div>
+      <div class="tip">Replace <strong>wc2026-stats.vercel.app</strong> with your actual Vercel URL from Step 5.</div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+</body>
+</html>
