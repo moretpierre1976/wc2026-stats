@@ -3,339 +3,350 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>WC 2026 — Upload Players Spreadsheet</title>
+  <title>WC 2026 — Upload Players</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,sans-serif;background:#05080f;color:#dce8f4;
-         min-height:100vh;padding:24px 16px}
+    body{font-family:-apple-system,sans-serif;background:#05080f;color:#dce8f4;min-height:100vh;padding:24px 16px}
     .wrap{max-width:520px;margin:0 auto}
     h1{font-size:22px;font-weight:800;color:#f59e0b;margin-bottom:4px}
-    .sub{font-size:13px;color:#4a6a88;margin-bottom:24px;line-height:1.6}
-    /* Config box */
-    .box{background:#0c1520;border:1px solid #1e3a55;border-radius:12px;
-         padding:18px;margin-bottom:16px}
-    .box h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;
-            color:#f59e0b;margin-bottom:14px}
-    label{display:block;font-size:11px;color:#4a6a88;text-transform:uppercase;
-          letter-spacing:1px;margin-bottom:4px;margin-top:10px}
+    .sub{font-size:13px;color:#4a6a88;margin-bottom:20px;line-height:1.6}
+    .box{background:#0c1520;border:1px solid #1e3a55;border-radius:12px;padding:18px;margin-bottom:14px}
+    .box h2{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#f59e0b;margin-bottom:14px}
+    label{display:block;font-size:11px;color:#4a6a88;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;margin-top:12px}
     label:first-of-type{margin-top:0}
-    input{width:100%;background:#070c14;border:1px solid #1e3a55;border-radius:8px;
-          padding:10px 12px;color:#dce8f4;font-size:13px;outline:none}
-    input:focus{border-color:#f59e0b}
-    /* Drop zone */
-    .drop{background:#070c14;border:2px dashed #1e3a55;border-radius:12px;
-          padding:36px 20px;text-align:center;cursor:pointer;
-          transition:all .2s;margin-bottom:16px}
+    input[type=text]{width:100%;background:#070c14;border:1px solid #1e3a55;border-radius:8px;padding:10px 12px;color:#dce8f4;font-size:13px;outline:none}
+    input[type=text]:focus{border-color:#f59e0b}
+    .saved-badge{display:inline-block;background:#0a1a10;border:1px solid #10b981;border-radius:4px;padding:2px 8px;font-size:10px;color:#10b981;margin-left:8px;vertical-align:middle}
+    .drop{background:#070c14;border:2px dashed #1e3a55;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
     .drop.drag{border-color:#f59e0b;background:#0c1520}
-    .drop.has-file{border-color:#10b981;border-style:solid;background:#060f0a}
-    .drop-icon{font-size:36px;margin-bottom:10px}
+    .drop.has-file{border-color:#10b981;border-style:solid}
+    .drop-icon{font-size:34px;margin-bottom:8px}
     .drop-title{font-size:15px;font-weight:700;color:#7aabc8;margin-bottom:4px}
     .drop-sub{font-size:12px;color:#2d4a60}
     .drop.has-file .drop-title{color:#10b981}
-    /* Preview table */
-    .preview{background:#070c14;border:1px solid #1e3a55;border-radius:12px;
-             padding:16px;margin-bottom:16px;display:none}
-    .preview h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;
-                color:#10b981;margin-bottom:12px}
-    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
-                margin-bottom:14px}
+    .preview{background:#070c14;border:1px solid #1e3a55;border-radius:12px;padding:16px;margin-bottom:14px;display:none}
+    .preview h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#10b981;margin-bottom:12px}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
     .stat{background:#0c1520;border-radius:8px;padding:10px;text-align:center}
     .stat-num{font-size:22px;font-weight:800;color:#f59e0b}
-    .stat-lbl{font-size:10px;color:#2d4a60;text-transform:uppercase;
-              letter-spacing:1px;margin-top:2px}
-    .sample{font-size:11px;color:#4a6a88;line-height:1.8;border-top:1px solid #1e3a55;
-            padding-top:12px}
+    .stat-lbl{font-size:10px;color:#2d4a60;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+    .sample{font-size:11px;color:#4a6a88;line-height:1.9;border-top:1px solid #1e3a55;padding-top:10px}
     .sample span{color:#7aabc8}
-    /* Progress */
-    .prog-wrap{margin-bottom:16px;display:none}
+    .errbox{background:#120a08;border:1px solid #3a1e10;border-radius:8px;padding:10px 14px;font-size:12px;color:#8a4a30;margin:10px 0;display:none}
+    .prog-wrap{margin-bottom:14px;display:none}
     .prog-bg{background:#1e3a55;border-radius:6px;height:10px;overflow:hidden}
-    .prog-bar{background:linear-gradient(90deg,#f59e0b,#ef4444);height:10px;
-              width:0%;border-radius:6px;transition:width .3s}
+    .prog-bar{background:linear-gradient(90deg,#f59e0b,#ef4444);height:10px;width:0%;border-radius:6px;transition:width .3s}
     .prog-txt{font-size:12px;color:#4a6a88;text-align:center;margin-top:8px}
-    /* Buttons */
-    .btn-upload{width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#ef4444);
-                color:#fff;font-size:16px;font-weight:800;border:none;border-radius:12px;
-                cursor:pointer;display:none;letter-spacing:0.5px}
-    .btn-upload:disabled{opacity:.5;cursor:not-allowed}
-    /* Log */
-    #log{background:#070c14;border:1px solid #1e3a55;border-radius:12px;
-         padding:14px;margin-top:16px;font-size:12px;line-height:2;
-         max-height:260px;overflow-y:auto;display:none}
-    .ok {color:#10b981} .err{color:#ef4444} .info{color:#f59e0b} .dim{color:#2d4a60}
-    /* Download link */
-    .dl{display:flex;align-items:center;gap:10px;background:#0c1520;
-        border:1px solid #1e3a55;border-radius:10px;padding:14px;margin-bottom:16px;
-        text-decoration:none;color:#dce8f4}
+    .btn-main{width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:16px;font-weight:800;border:none;border-radius:12px;cursor:pointer;display:none;letter-spacing:.5px}
+    .btn-main:disabled{opacity:.5;cursor:not-allowed}
+    .dl{display:flex;align-items:center;gap:10px;background:#0c1520;border:1px solid #1e3a55;border-radius:10px;padding:14px;text-decoration:none;color:#dce8f4;margin-bottom:14px}
     .dl:hover{border-color:#f59e0b}
-    .dl-icon{font-size:28px}
+    .dl-icon{font-size:26px}
     .dl-text{font-size:13px;font-weight:700}
     .dl-sub{font-size:11px;color:#4a6a88;margin-top:2px}
+    #log{background:#070c14;border:1px solid #1e3a55;border-radius:12px;padding:14px;margin-top:14px;font-size:12px;line-height:2;max-height:240px;overflow-y:auto;display:none}
+    .ok{color:#10b981}.err{color:#ef4444}.info{color:#f59e0b}.dim{color:#2d4a60}
   </style>
 </head>
 <body>
 <div class="wrap">
-
   <h1>⚽ WC 2026 — Update Players</h1>
-  <p class="sub">Edit the Excel spreadsheet, then upload it here.<br>
-     All changes go live instantly for every user.</p>
+  <p class="sub">Edit the Excel file, upload it here — all users see changes instantly.</p>
 
-  <!-- Download current template -->
   <a class="dl" href="WC2026_Players.xlsx" download>
     <div class="dl-icon">📥</div>
     <div>
       <div class="dl-text">Download WC2026_Players.xlsx</div>
-      <div class="dl-sub">Edit this in Numbers (iPhone) or Excel, then upload below</div>
+      <div class="dl-sub">Always download the latest version before editing</div>
     </div>
   </a>
 
-  <!-- Firebase config -->
   <div class="box">
-    <h2>🔑 Firebase Config (one-time setup)</h2>
+    <h2>🔑 Firebase Config <span class="saved-badge" id="savedBadge" style="display:none">✓ Saved on this phone</span></h2>
     <label>API Key</label>
-    <input id="apiKey" placeholder="AIzaSyAyH-_1LzyAJraA--RY9frcC7z8OL9iRCE" autocomplete="off"/>
+    <input type="text" id="apiKey" placeholder="AIzaSy..." autocomplete="off"/>
     <label>Project ID</label>
-    <input id="projectId" placeholder="wc2026-stats" autocomplete="off"/>
+    <input type="text" id="projectId" placeholder="wc2026-stats" autocomplete="off"/>
     <label>App ID</label>
-    <input id="appId" placeholder="1:856626788199:web:17e29a4057cfe7a14d21c2" autocomplete="off"/>
-    <p style="font-size:11px;color:#1e3a55;margin-top:10px">
-      💡 Tip: save this page to your home screen so you don't have to re-enter these each time.
-    </p>
+    <input type="text" id="appId" placeholder="1:123456789:web:abc123" autocomplete="off"/>
+    <p style="font-size:11px;color:#1e3a55;margin-top:10px">These are saved automatically on this phone — you only need to enter them once.</p>
   </div>
 
-  <!-- Drop zone -->
   <div class="drop" id="dropzone"
        onclick="document.getElementById('fileinput').click()"
-       ondragover="ev(event,'drag')" ondragleave="ev(event,'leave')"
-       ondrop="ev(event,'drop')">
+       ondragover="onDrag(event,'over')" ondragleave="onDrag(event,'leave')" ondrop="onDrag(event,'drop')">
     <div class="drop-icon" id="dropIcon">📊</div>
     <div class="drop-title" id="dropTitle">Tap to choose your Excel file</div>
-    <div class="drop-sub" id="dropSub">.xlsx or .csv — edit in Numbers or Excel first</div>
+    <div class="drop-sub" id="dropSub">.xlsx exported from Numbers or Excel</div>
   </div>
-  <input type="file" id="fileinput" accept=".xlsx,.csv"
-         style="display:none" onchange="fileChosen(this.files[0])"/>
+  <input type="file" id="fileinput" accept=".xlsx,.csv,.xls" style="display:none" onchange="fileChosen(this.files[0])"/>
 
-  <!-- Preview -->
+  <div class="errbox" id="errBox"></div>
+
   <div class="preview" id="preview">
     <h2>📋 Preview — ready to upload</h2>
     <div class="stats-grid">
       <div class="stat"><div class="stat-num" id="pCount">0</div><div class="stat-lbl">Players</div></div>
-      <div class="stat"><div class="stat-num" id="pNew">0</div><div class="stat-lbl">New / Changed</div></div>
-      <div class="stat"><div class="stat-num" id="pCols">0</div><div class="stat-lbl">Columns</div></div>
+      <div class="stat"><div class="stat-num" id="pCols">0</div><div class="stat-lbl">Fields each</div></div>
+      <div class="stat"><div class="stat-num" id="pCountries">0</div><div class="stat-lbl">Countries</div></div>
     </div>
     <div class="sample" id="sample"></div>
   </div>
 
-  <!-- Progress -->
   <div class="prog-wrap" id="progWrap">
     <div class="prog-bg"><div class="prog-bar" id="progBar"></div></div>
     <div class="prog-txt" id="progTxt">Preparing…</div>
   </div>
 
-  <!-- Upload button -->
-  <button class="btn-upload" id="uploadBtn" onclick="doUpload()">
-    Upload &amp; Sync to Firestore →
-  </button>
-
-  <!-- Log -->
+  <button class="btn-main" id="uploadBtn" onclick="doUpload()">Upload & Sync to Firestore →</button>
   <div id="log"></div>
-
 </div>
 
-<!-- SheetJS for Excel reading -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let parsedPlayers = [];
-let db = null;
+// Exact numeric fields the app expects in Firestore
+const NUMERIC_FIELDS = [
+  'id','age',
+  'club_goals','club_assists','club_shots','club_cs','club_saves','club_yc','club_rc','club_mins',
+  'intl_goals','intl_assists','intl_shots','intl_cs','intl_saves','intl_yc','intl_rc','intl_apps','intl_mins'
+];
 
-// ── Drag & drop ────────────────────────────────────────────────────────────
-function ev(e, type) {
-  e.preventDefault();
-  const dz = document.getElementById('dropzone');
-  if (type === 'drag')  dz.classList.add('drag');
-  if (type === 'leave') dz.classList.remove('drag');
-  if (type === 'drop') {
-    dz.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file) fileChosen(file);
-  }
+// Maps any header variant -> correct Firestore field name
+const HEADER_MAP = {
+  // Exact field names (new Excel format)
+  'id':'id','name':'name','country':'country','team':'team','pos':'pos','age':'age','league':'league',
+  'club_goals':'club_goals','club_assists':'club_assists','club_shots':'club_shots',
+  'club_cs':'club_cs','club_saves':'club_saves','club_yc':'club_yc','club_rc':'club_rc','club_mins':'club_mins',
+  'intl_goals':'intl_goals','intl_assists':'intl_assists','intl_shots':'intl_shots',
+  'intl_cs':'intl_cs','intl_saves':'intl_saves','intl_yc':'intl_yc','intl_rc':'intl_rc',
+  'intl_apps':'intl_apps','intl_mins':'intl_mins',
+  // Old abbreviated headers from previous Excel version
+  'club g':'club_goals','club a':'club_assists','club sh':'club_shots',
+  'club sv':'club_saves','club yc':'club_yc','club rc':'club_rc',
+  'club mins':'club_mins','club cs':'club_cs',
+  'intl g':'intl_goals','intl a':'intl_assists','intl sh':'intl_shots',
+  'intl sv':'intl_saves','intl yc':'intl_yc','intl rc':'intl_rc',
+  'intl mins':'intl_mins','intl cs':'intl_cs','intl apps':'intl_apps',
+  // "club" column was previously used for team name
+  'club':'team',
+};
+
+let parsedPlayers = [];
+
+// Load saved config on page open
+window.addEventListener('load', () => {
+  try {
+    const s = JSON.parse(localStorage.getItem('wc2026_config') || '{}');
+    if (s.apiKey)    { document.getElementById('apiKey').value = s.apiKey; }
+    if (s.projectId) { document.getElementById('projectId').value = s.projectId; }
+    if (s.appId)     { document.getElementById('appId').value = s.appId; }
+    if (s.apiKey)    { document.getElementById('savedBadge').style.display = 'inline-block'; }
+  } catch(e) {}
+  ['apiKey','projectId','appId'].forEach(id => {
+    document.getElementById(id).addEventListener('input', saveConfig);
+  });
+});
+
+function saveConfig() {
+  try {
+    localStorage.setItem('wc2026_config', JSON.stringify({
+      apiKey:    document.getElementById('apiKey').value.trim(),
+      projectId: document.getElementById('projectId').value.trim(),
+      appId:     document.getElementById('appId').value.trim(),
+    }));
+    document.getElementById('savedBadge').style.display = 'inline-block';
+  } catch(e) {}
 }
 
-// ── File chosen ────────────────────────────────────────────────────────────
+function onDrag(e, type) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (type === 'over')  dz.classList.add('drag');
+  if (type === 'leave') dz.classList.remove('drag');
+  if (type === 'drop')  { dz.classList.remove('drag'); if (e.dataTransfer.files[0]) fileChosen(e.dataTransfer.files[0]); }
+}
+
 function fileChosen(file) {
-  if (!file) return;
-  document.getElementById('dropTitle').textContent = file.name;
-  document.getElementById('dropSub').textContent   = `${(file.size/1024).toFixed(1)} KB — reading…`;
   document.getElementById('dropIcon').textContent  = '⏳';
-  document.getElementById('dropzone').classList.add('has-file');
+  document.getElementById('dropTitle').textContent = file.name;
+  document.getElementById('dropSub').textContent   = 'Reading…';
+  document.getElementById('dropzone').classList.remove('has-file');
+  document.getElementById('errBox').style.display  = 'none';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('uploadBtn').style.display = 'none';
+  parsedPlayers = [];
 
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const data = new Uint8Array(e.target.result);
-      const wb   = XLSX.read(data, { type: 'array' });
+      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const name = wb.SheetNames.includes('Players') ? 'Players' : wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1, defval:0, blankrows:false });
 
-      // Try "Players" sheet first, else first sheet
-      const sheetName = wb.SheetNames.includes('Players')
-        ? 'Players' : wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
+      // Find the header row — the row containing both "id" and "name"
+      let hi = -1;
+      for (let i = 0; i < Math.min(rows.length, 6); i++) {
+        const low = rows[i].map(c => String(c).trim().toLowerCase());
+        if ((low.includes('id') || low.includes('id')) && low.includes('name')) { hi = i; break; }
+      }
+      if (hi === -1) throw new Error('Cannot find header row. Make sure columns "id" and "name" exist.');
 
-      // Get rows — skip row 1 (group header), use row 2 as column names
-      const rows = XLSX.utils.sheet_to_json(ws, {
-        header: 1,
-        defval: 0,
-        blankrows: false
+      // Map each header to its correct Firestore field name
+      const headers = rows[hi].map(h => {
+        const k = String(h).trim().toLowerCase();
+        return HEADER_MAP[k] || k.replace(/ /g,'_').replace(/[^a-z0-9_]/g,'');
       });
 
-      // Row index 0 = group header ("PLAYER INFO" / "CLUB STATS" etc)
-      // Row index 1 = column headers (id, name, country…)
-      // Row index 2+ = data
-      const headerRow = rows[1]; // second row
-      const dataRows  = rows.slice(2).filter(r => r[0] && r[0] !== 'id');
+      // Data rows = everything after the header row, where id is a positive number
+      const data = rows.slice(hi + 1).filter(r => Number(r[0]) > 0);
 
-      parsedPlayers = dataRows.map(row => {
+      parsedPlayers = data.map(row => {
         const p = {};
-        headerRow.forEach((h, i) => {
+        headers.forEach((h, i) => {
           if (!h) return;
-          const key = String(h).trim().toLowerCase()
-            .replace(/ /g,'_').replace(/[^a-z0-9_]/g,'');
-          const val = row[i] ?? 0;
-          // Numeric fields
-          const numericKeys = ['id','age','club_goals','club_assists','club_shots',
-            'club_cs','club_saves','club_yc','club_rc','club_mins',
-            'intl_goals','intl_assists','intl_shots','intl_cs','intl_saves',
-            'intl_yc','intl_rc','intl_apps','intl_mins'];
-          p[key] = numericKeys.includes(key) ? (Number(val)||0) : String(val).trim();
+          const v = row[i] ?? 0;
+          p[h] = NUMERIC_FIELDS.includes(h) ? (Number(v) || 0) : String(v).trim();
         });
         return p;
-      }).filter(p => p.id > 0);
+      }).filter(p => p.id > 0 && p.name);
 
-      showPreview(file.name, parsedPlayers);
+      if (parsedPlayers.length === 0) throw new Error('No valid player rows found.');
+
+      // Validate: check goals are not all zero
+      const totalGoals = parsedPlayers.reduce((s,p) => s + (p.club_goals||0), 0);
+      const countries  = new Set(parsedPlayers.map(p => p.country)).size;
+
+      document.getElementById('pCount').textContent     = parsedPlayers.length;
+      document.getElementById('pCols').textContent      = Object.keys(parsedPlayers[0]).length;
+      document.getElementById('pCountries').textContent = countries;
+
+      const sampleHtml = parsedPlayers.slice(0,3).map(p =>
+        '<span>' + p.name + '</span> · ' + p.country + ' · ' + p.pos +
+        ' · <span style="color:#10b981">G:' + (p.club_goals||0) + ' A:' + (p.club_assists||0) + '</span>'
+      ).join('<br/>');
+
+      document.getElementById('sample').innerHTML = sampleHtml +
+        (parsedPlayers.length > 3 ? '<br/><span style="color:#1e3a55">…and ' + (parsedPlayers.length-3) + ' more</span>' : '') +
+        (totalGoals === 0 ? '<br/><span style="color:#ef4444">⚠️ Warning: all club_goals are 0 — double-check your file has correct data</span>' : '');
+
+      document.getElementById('dropIcon').textContent  = '✅';
+      document.getElementById('dropSub').textContent   = parsedPlayers.length + ' players · ' + Object.keys(parsedPlayers[0]).length + ' fields each';
+      document.getElementById('dropzone').classList.add('has-file');
+      document.getElementById('preview').style.display  = 'block';
+      document.getElementById('uploadBtn').style.display = 'block';
 
     } catch(err) {
-      log(`Error reading file: ${err.message}`, 'err');
-      document.getElementById('dropTitle').textContent = '⚠️ Could not read file';
-      document.getElementById('dropSub').textContent   = 'Make sure it is .xlsx or .csv';
+      document.getElementById('dropIcon').textContent = '⚠️';
+      document.getElementById('dropTitle').textContent = 'Error reading file';
+      document.getElementById('dropSub').textContent  = err.message;
+      const eb = document.getElementById('errBox');
+      eb.style.display = 'block';
+      eb.textContent = '⚠️ ' + err.message;
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ── Show preview ────────────────────────────────────────────────────────────
-function showPreview(fname, players) {
-  document.getElementById('dropIcon').textContent = '✅';
-  document.getElementById('dropSub').textContent  = 'File read successfully';
-
-  document.getElementById('pCount').textContent = players.length;
-  document.getElementById('pNew').textContent   = players.length;
-  document.getElementById('pCols').textContent  =
-    players.length > 0 ? Object.keys(players[0]).length : 0;
-
-  // Sample first 3 players
-  const sample = players.slice(0,3).map(p =>
-    `<span>${p.name}</span> · ${p.country} · ${p.pos} · ${p.team}`
-  ).join('<br/>');
-  document.getElementById('sample').innerHTML =
-    `First few players:<br/>${sample}${players.length > 3 ? `<br/><span style="color:#1e3a55">…and ${players.length-3} more</span>` : ''}`;
-
-  document.getElementById('preview').style.display = 'block';
-  document.getElementById('uploadBtn').style.display = 'block';
-}
-
-// ── Upload to Firestore ────────────────────────────────────────────────────
 async function doUpload() {
-  if (parsedPlayers.length === 0) { alert('No players found in file.'); return; }
-
   const apiKey    = document.getElementById('apiKey').value.trim();
   const projectId = document.getElementById('projectId').value.trim();
   const appId     = document.getElementById('appId').value.trim();
 
   if (!apiKey || !projectId || !appId) {
-    alert('Please fill in your Firebase config fields first.');
+    alert('Please fill in API Key, Project ID and App ID first.');
+    return;
+  }
+  if (parsedPlayers.length === 0) {
+    alert('Please choose an Excel file first.');
     return;
   }
 
-  document.getElementById('uploadBtn').disabled = true;
-  document.getElementById('uploadBtn').textContent = 'Uploading…';
-  document.getElementById('progWrap').style.display = 'block';
-  document.getElementById('log').style.display = 'block';
+  saveConfig();
 
-  // Init Firebase (safe to call multiple times)
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  document.getElementById('progWrap').style.display = 'block';
+  document.getElementById('log').style.display      = 'block';
+
   try {
     if (!firebase.apps.length) {
       firebase.initializeApp({ apiKey, projectId, appId,
-        authDomain: `${projectId}.firebaseapp.com`,
-        storageBucket: `${projectId}.appspot.com`,
+        authDomain: projectId + '.firebaseapp.com',
+        storageBucket: projectId + '.appspot.com',
       });
     }
-    db = firebase.firestore();
   } catch(e) {
-    log(`Firebase init error: ${e.message}`, 'err');
-    document.getElementById('uploadBtn').disabled = false;
-    document.getElementById('uploadBtn').textContent = 'Retry Upload';
-    return;
-  }
-
-  log(`Connected to project: <b>${projectId}</b>`, 'info');
-  log(`Uploading ${parsedPlayers.length} players…`, 'info');
-
-  const BATCH_SIZE = 400;
-  let done = 0;
-
-  for (let i = 0; i < parsedPlayers.length; i += BATCH_SIZE) {
-    const chunk = parsedPlayers.slice(i, i + BATCH_SIZE);
-    const batch = db.batch();
-    chunk.forEach(p => {
-      const ref = db.collection('players').doc(String(p.id));
-      batch.set(ref, p); // full replace of each document
-    });
-    try {
-      await batch.commit();
-      done += chunk.length;
-      const pct = Math.round((done / parsedPlayers.length) * 100);
-      document.getElementById('progBar').style.width = pct + '%';
-      document.getElementById('progTxt').textContent = `${done} / ${parsedPlayers.length} players uploaded (${pct}%)`;
-      log(`✓ ${done} players synced…`, 'ok');
-    } catch(e) {
-      log(`✗ Upload failed: ${e.message}`, 'err');
-      if (e.message.includes('Missing or insufficient permissions')) {
-        log('Go to Firebase Console → Firestore → Rules and allow write: if true temporarily.', 'err');
-      }
-      document.getElementById('uploadBtn').disabled = false;
-      document.getElementById('uploadBtn').textContent = 'Retry Upload';
+    if (!e.message.includes('already')) {
+      log('Firebase init failed: ' + e.message, 'err');
+      btn.disabled = false; btn.textContent = 'Retry';
       return;
     }
   }
 
-  // Remove players that are in Firestore but NOT in the spreadsheet
-  log('Checking for removed players…', 'dim');
-  const spreadsheetIds = new Set(parsedPlayers.map(p => String(p.id)));
-  const snapshot = await db.collection('players').get();
-  const toDelete = snapshot.docs.filter(d => !spreadsheetIds.has(d.id));
+  const db = firebase.firestore();
+  log('Connected to: <b>' + projectId + '</b>', 'info');
+  log('Uploading ' + parsedPlayers.length + ' players…', 'info');
 
-  if (toDelete.length > 0) {
-    const delBatch = db.batch();
-    toDelete.forEach(d => delBatch.delete(d.ref));
-    await delBatch.commit();
-    log(`🗑 Removed ${toDelete.length} players that were deleted from the spreadsheet`, 'info');
+  // Upload in batches of 400
+  let done = 0;
+  const BATCH = 400;
+  for (let i = 0; i < parsedPlayers.length; i += BATCH) {
+    const batch = db.batch();
+    parsedPlayers.slice(i, i + BATCH).forEach(p => {
+      batch.set(db.collection('players').doc(String(p.id)), p);
+    });
+    try {
+      await batch.commit();
+      done += Math.min(BATCH, parsedPlayers.length - i);
+      const pct = Math.round(done / parsedPlayers.length * 100);
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('progTxt').textContent = done + ' / ' + parsedPlayers.length + ' players (' + pct + '%)';
+      log('✓ ' + done + ' players uploaded', 'ok');
+    } catch(e) {
+      log('✗ Upload failed: ' + e.message, 'err');
+      if (e.message.includes('permissions')) {
+        log('Go to Firebase Console → Firestore → Rules', 'err');
+        log('Change: allow write: if false  →  allow write: if true', 'err');
+        log('Tap Publish, then try again.', 'err');
+      }
+      btn.disabled = false; btn.textContent = 'Retry Upload';
+      return;
+    }
   }
+
+  // Remove players that were deleted from the spreadsheet
+  log('Checking for removed players…', 'dim');
+  const ids  = new Set(parsedPlayers.map(p => String(p.id)));
+  const snap = await db.collection('players').get();
+  const gone = snap.docs.filter(d => !ids.has(d.id));
+  if (gone.length > 0) {
+    const delBatch = db.batch();
+    gone.forEach(d => delBatch.delete(d.ref));
+    await delBatch.commit();
+    log('🗑 Removed ' + gone.length + ' deleted players', 'info');
+  }
+
+  // Clear local cache so app fetches fresh data
+  try { localStorage.removeItem('wc2026_players'); localStorage.removeItem('wc2026_cached_at'); } catch(e) {}
 
   log('', '');
   log('🎉 ALL DONE! Firestore is now in sync with your spreadsheet.', 'ok');
-  log('All users will see the updated player list immediately.', 'dim');
+  log('All users will see the updated stats immediately.', 'dim');
+  log('', '');
+  log('⚠️ Remember to lock Firestore rules back:', 'info');
+  log('Firebase Console → Firestore → Rules → change allow write: if true → allow write: if false → Publish', 'dim');
 
-  document.getElementById('uploadBtn').textContent = '✓ Upload Complete!';
-  document.getElementById('progTxt').textContent = 'Sync complete ✓';
+  document.getElementById('progTxt').textContent = 'Upload complete ✓';
+  btn.textContent = '✓ Done!';
 }
 
-// ── Log helper ──────────────────────────────────────────────────────────────
-function log(msg, cls='dim') {
+function log(msg, cls) {
+  cls = cls || 'dim';
   const d = document.getElementById('log');
-  d.innerHTML += `<div class="${cls}">${msg}</div>`;
+  d.innerHTML += '<div class="' + cls + '">' + msg + '</div>';
   d.scrollTop = d.scrollHeight;
 }
 </script>
